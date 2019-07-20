@@ -3,6 +3,9 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 5000;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 // tell it to use the public directory as one where static files live
 app.use(express.static(path.join(__dirname, 'public')))
 	.set('views', path.join(__dirname, 'views'))
@@ -21,19 +24,18 @@ app.use(express.static(path.join(__dirname, 'public')))
 		console.log('Node app is running on port', port);
 	});
 
-
 function getLogin(req, res) {
-	let username = req.query.username;
-	let password = req.query.password;  
+	let username = req.body.username;
+	let password = req.body.password;  
 
 	const params = {username};
 	res.redirect('home.html');
 }
 
 function getsignup(req, res) {
-	let username = req.query.username;
-	let password = req.query.password;  
+	let username = req.body.username;
+	let password = req.body.password;  
 
-	const params = {error: 'Oops! You just made an account. This isn\'t actually an error.', username: 'Some Name'};
+	const params = {error: 'Oops! You just made an account. This isn\'t actually an error.', username: username};
 	res.render('signin', params);
 }
