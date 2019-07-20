@@ -80,7 +80,7 @@ html,body{
 #user-menu-content{
 	display:none;
 	background-color:#FFF;
-	box-shadow:0 3px 5px #AAA;
+	box-shadow:0 3px 5px #444;
 	position:absolute;
 	width:auto;
 	right:0;

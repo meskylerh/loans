@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 	.post('/login', getLogin)
 	.post('/create_account', getsignup)
 	.get('/signup', (req, res) => {
-		const params = {error: null};
+		const params = {error: undefined};
 		res.render('signup', params);
 	})
 	.listen(port, function() {
