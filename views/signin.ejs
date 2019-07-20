@@ -11,30 +11,27 @@
 	<title>Sign In</title>
 </head>
 <body>
-<div class="container mt-3" style="width:500px;">
-			<div class="alert alert-danger" role="alert" style="display:<%=typeof(error)!='undefined'?'block':'none'%>">
-				<%=error%>
+	<div class="container mt-3" style="width:500px;">
+		<div class="alert alert-danger" role="alert" style="display:<%=typeof(error)!='undefined'?'block':'none'%>">
+			<%=error%>
+		</div>
+		<div class="card card-default">
+			<div class="card-header">
+				<h5 class="card-title">Please Sign In</h5>
 			</div>
-       		<div class="card card-default">
-			  	<div class="card-header">
-			    	<h5 class="card-title">Please Sign In</h5>
-			 	</div>
-			  	<div class="card-body">
-			    	<form action="/login" method="post">
-                    <fieldset>
-			    	  	<div class="form-group">
-			    		    <input class="form-control" placeholder="Username" name="username" type="text" value="<%=typeof(username)!='undefined'?username:''%>" required>
-			    		</div>
-			    		<div class="form-group">
-			    			<input class="form-control" placeholder="Password" name="password" type="password" value="" required>
-			    		</div>
-			    	    		
-			    		<input class="btn btn-lg btn-success btn-block" type="submit" value="Login">
-			    	</fieldset>
-               <a href="/signup">Sign Up</a>
-			      	</form>
-			    </div>
+			<div class="card-body">
+			<form action="/login" method="post">
+				<div class="form-group">
+					<input class="form-control" placeholder="Username" name="username" type="text" value="<%=typeof(username)!='undefined'?username:''%>" required>
+				</div>
+				<div class="form-group">
+					<input class="form-control" placeholder="Password" name="password" type="password" value="" required>
+				</div>
+				<input class="btn btn-lg btn-success btn-block" type="submit" value="Login">
+				<a href="/signup">Sign Up</a>
+			</form>
 			</div>
-</div>
+		</div>
+	</div>
 </body>
 </html>
