@@ -30,6 +30,16 @@ app.use(express.static(path.join(__dirname, 'public')))
 		const params = {error: undefined};
 		res.render('signup', params);
 	})
+	.get('/logout', function(req, res){
+		cookie = req.cookies;
+		for (var prop in cookie) {
+			if (!cookie.hasOwnProperty(prop)) {
+				continue;
+			}    
+			res.cookie(prop, '', {expires: new Date(0)});
+		}
+		res.redirect('/');
+	})
 	.listen(port, function() {
 		console.log('Node app is running on port', port);
 	});
