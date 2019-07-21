@@ -1,8 +1,15 @@
 const express = require('express');
+var router = express.Router();
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const app = express();
 const port = process.env.PORT || 5000;
+var pg = require('pg');
+const { Pool } = require('pg');
+const connectionString= process.env.DATABASE_URL || "postgres://xudkuimqplpmmo:0516a5ff94de949e55869277eeb1d5c820cde815c54e3c0f8c331b103f52ccee@ec2-54-243-47-196.compute-1.amazonaws.com:5432/d40chnldedvpjo?ssl=true";
+
+const pool = new Pool({connectionString: connectionString});
+
 
 let sessions=new Map();// session -> user_id
 function GUID(){
@@ -42,33 +49,46 @@ app.use(express.static(path.join(__dirname, 'public')))
 	})
 	.listen(port, function() {
 		console.log('Node app is running on port', port);
+      
+   
 	});
 
 function getLogin(req, res) {
 	let username = req.body.username;
 	let password = req.body.password;
 	
-	/* TODO:
-		Access the database to check if the user's login is valid.
-		Send back to signin page with an error message if not valid.
-	*/
-	
-	setSession(req, res, 1/*user_id*/);
-	
-	res.redirect('home.html');
+      pool.connect();
+      pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
+         if (result.rows.length == 0 || result.rows[0].password != password){
+          const params = {error: "Invalid username or password"};
+          res.render('signin', params);
+             return; 
+         }
+         setSession(req, res, 1/*user_id*/);
+         res.redirect('home.html');
+      });	
 }
 
 function getsignup(req, res) {
 	let username = req.body.username;
 	let password = req.body.password;  
-	
-	/* TODO:
-		Validate credentials are valid.
-		Send back to signup page with an error message if not valid.
-	*/
-
-	const params = {error: 'Oops! You just made an account. This isn\'t actually an error.', username: username};
-	res.render('signin', params);
+   let valid = true;
+   
+      pool.connect();
+       pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
+        if (result.rows.length > 0){
+          const params = {error: "Username already in use"};
+          res.render('signup', params);
+          valid = false;
+          return;
+        }
+        if(valid){
+     pool.query("INSERT INTO users(username,password) VALUES($1,$2)",[username, password], function (err, result){
+     	const params = {error: undefined, username: username};
+      res.render('signin', params);
+       });
+        }
+       });
 }
 
 function setSession(req, res, userID){
