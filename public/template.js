@@ -1,4 +1,4 @@
-var count = 1;
+var count = 0;
 
 function addItem() {
     $('#accordionEx .collapse').collapse('hide');
@@ -7,7 +7,7 @@ function addItem() {
 	<!-- Card header -->
 	<div class="card-header" role="tab" id="heading${count}">
 		<a data-toggle="collapse" data-parent="#accordionEx" href="#collapse${count}" aria-expanded="true" aria-controls="collapse${count}">
-			<h5 class="mb-0">Vehicle #${count}</h5>
+			<h5 class="mb-0">Vehicle #${count+1}</h5>
 		</a>
 	</div>
 
@@ -45,4 +45,5 @@ function addItem() {
 `));
 	$("html, body").animate({ scrollTop: $(document).height() }, 1000);
     ++count;
+	document.forms[0]['collateral_count'].value=count;
 }
