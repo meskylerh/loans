@@ -10,7 +10,6 @@ const connectionString= process.env.DATABASE_URL || "postgres://xudkuimqplpmmo:0
 
 const pool = new Pool({connectionString: connectionString});
 
-
 let sessions=new Map();// session -> user_id
 function GUID(){
 	return 'X-'+('00000000'+(Math.random()*0x100000000>>>0).toString(16)).slice(-8)+
@@ -38,9 +37,9 @@ app.use(express.static(path.join(__dirname, 'public')))
 		res.render('signup', params);
 	})
 	.get('/logout', function(req, res){
-		cookie = req.cookies;
-		for (var prop in cookie) {
-			if (!cookie.hasOwnProperty(prop)) {
+		sessions.delete(req.cookies.session);
+		for (var prop in req.cookies) {
+			if (!req.cookies.hasOwnProperty(prop)) {
 				continue;
 			}    
 			res.cookie(prop, '', {expires: new Date(0)});
@@ -49,46 +48,44 @@ app.use(express.static(path.join(__dirname, 'public')))
 	})
 	.listen(port, function() {
 		console.log('Node app is running on port', port);
-      
-   
 	});
 
 function getLogin(req, res) {
 	let username = req.body.username;
 	let password = req.body.password;
-	
-      pool.connect();
-      pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
-         if (result.rows.length == 0 || result.rows[0].password != password){
-          const params = {error: "Invalid username or password"};
-          res.render('signin', params);
-             return; 
-         }
-         setSession(req, res, 1/*user_id*/);
-         res.redirect('home.html');
-      });	
+
+	pool.connect();
+	pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
+		if (result.rows.length == 0 || result.rows[0].password != password){
+			const params = {error: "Invalid username or password"};
+			res.render('signin', params);
+			return; 
+		}
+		setSession(req, res, result.rows[0].user_id);
+		res.redirect('home.html');
+	});	
 }
 
 function getsignup(req, res) {
 	let username = req.body.username;
 	let password = req.body.password;  
-   let valid = true;
-   
-      pool.connect();
-       pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
-        if (result.rows.length > 0){
-          const params = {error: "Username already in use"};
-          res.render('signup', params);
-          valid = false;
-          return;
-        }
-        if(valid){
-     pool.query("INSERT INTO users(username,password) VALUES($1,$2)",[username, password], function (err, result){
-     	const params = {error: undefined, username: username};
-      res.render('signin', params);
-       });
-        }
-       });
+	let valid = true;
+
+	pool.connect();
+	pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
+		if (result.rows.length > 0){
+			const params = {error: "Username already in use"};
+			res.render('signup', params);
+			valid = false;
+			return;
+		}
+		if(valid){
+			pool.query("INSERT INTO users(username,password) VALUES($1,$2)",[username, password], function (err, result){
+				const params = {error: undefined, username: username};
+				res.render('signin', params);
+		});
+		}
+	});
 }
 
 function setSession(req, res, userID){
@@ -103,7 +100,7 @@ function getAuthenticatedUserID(req, res){
 }
 
 function validateSession(req, res){
-	let session = req.cookies.session;// Get cookie
+	let session = req.cookies.session;
 	
 	if (!sessions.has(session)){
 		res.redirect('noauth.html');
