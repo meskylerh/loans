@@ -9,7 +9,7 @@ const { Pool } = require('pg');
 const connectionString= process.env.DATABASE_URL || "postgres://xudkuimqplpmmo:0516a5ff94de949e55869277eeb1d5c820cde815c54e3c0f8c331b103f52ccee@ec2-54-243-47-196.compute-1.amazonaws.com:5432/d40chnldedvpjo?ssl=true";
 
 const pool = new Pool({connectionString: connectionString});
-
+pool.connect();
 let sessions=new Map();// session -> user_id
 function GUID(){
 	return 'X-'+('00000000'+(Math.random()*0x100000000>>>0).toString(16)).slice(-8)+
@@ -17,7 +17,11 @@ function GUID(){
 			'-'+('00000000'+(Math.random()*0x100000000>>>0).toString(16)).slice(-8)+
 			'-'+('00000000'+(Math.random()*0x100000000>>>0).toString(16)).slice(-8);
 }
-
+const form_type ={
+   unsecured: 1,
+   secured: 2,
+   partial: 3
+};
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -37,7 +41,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 		let username = req.body.username;
 		let password = req.body.password;
 
-		pool.connect();
 		pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
 			if (result.rows.length == 0 || result.rows[0].password != password){
 				const params = {error: "Invalid username or password"};
@@ -55,7 +58,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 		let password = req.body.password;  
 		let valid = true;
 
-		pool.connect();
 		pool.query("SELECT * FROM users where username =$1",[username], function (err, result){
 			if (result.rows.length > 0){
 				const params = {error: "Username already in use"};
@@ -99,7 +101,6 @@ app.use(express.static(path.join(__dirname, 'public')))
 	
 	/* REQUEST LOAN */
 	.post('/request_loan', (req, res) => {
-		validateSession(req, res);
 		let userID = getAuthenticatedUserID(req, res);
 		let amount = req.body.amount;
 		let collateral_count = req.body.collateral_count;
@@ -114,13 +115,22 @@ app.use(express.static(path.join(__dirname, 'public')))
 			});
 		}
 		pool.query("INSERT INTO loan_request(user_id,amount,data) VALUES($1,$2,$3)",[userID, amount, JSON.stringify(data)], function (err, result){
-			// TODO:
-			// Add all necessary forms to the database for the user based on the values grabbed earlier.
-			// Replace noauth.html with a "Thanks" page of some sort.
-			res.redirect('noauth.html');
+         
+         if (collateral_count >0){
+            pool.query("INSERT INTO forms(signed, form_type,user_id) VALUES($1,$2,$3)", [false, form_type.secured ,userID], function (err, result){});
+         }
+         else{
+            pool.query("INSERT INTO forms(signed, form_type,user_id) VALUES($1,$2,$3)", [false, form_type.unsecured ,userID], function (err, result){});
+         }
+         const params = {amount};
+         res.render('loanresult', params);
 		});
 	})
-	
+	/* forms */
+	.get('/form', (req, res) => {
+		let userID = getAuthenticatedUserID(req, res);
+      
+	})
 	.listen(port, function() {
 		console.log('Node app is running on port', port);
 	});
